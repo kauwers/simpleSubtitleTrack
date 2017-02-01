@@ -16,18 +16,20 @@ def getTimedLines():
                 pass
             #catches other instances where timestamp and text are not on the same line
             elif re.findall(r'^[^\[][\w]+',line):
-                lineText = str(re.findall(r'^[[\s|\S]+',line))
+                lineText = removeBadQuotes(str(re.findall(r'^[[\s|\S]+',line)))
+                print(lineText)
                 lineText = lineText[2:-2].strip()
-                addToTimedLine(lineTime, lineText, timedLineDict)
+                addToTimedLine(lineTime, " part one " +lineText , timedLineDict)
             #catch instances where timestamp and text are on the same line
             elif re.findall(r'[0-9]+[\:][0-9]+[\:][0-9]+[\.][0-9]+', line):
                 lineTime = findTimeStamp(line)
                 lineTime = lineTime[2:-2].strip()
 
-                lineText = str(re.findall(r'[\]][\s|\S]*', line))
+                lineText = removeBadQuotes(str(re.findall(r'[\]][\s|\S]*', line)))
                 lineText = lineText[3:-2].strip()
+                print(lineText)
 
-                addToTimedLine(lineTime, lineText, timedLineDict)
+                addToTimedLine(lineTime,  lineText, timedLineDict)
             else:
                 pass
     file.close()
@@ -47,6 +49,11 @@ def addToTimedLine(time, text, theDict):
 
 def removeTabs(line):
     line=str(re.sub('\t|\r|\n', ' ', line)) #remove tabs from lines
+    return line
+
+#fix for single quotes that occur between double quotes
+def removeBadQuotes(line):
+    line=str(re.sub(r"\\","", line))
     return line
 
 #locates a string matching 00:00:00.00
