@@ -2,44 +2,57 @@ import re
 
 #Cycle through each file in the folder
 
-#Gets each line in file and create a tuple with timestamp, content, then add it to a list
-#make sure to ignore header and blank lines
-
-def getLines():
+#for input - Gets each line in file and create a tuple with timestamp, content, then add them to a dictionary as strings {timestamp, text}
+def getTimedLines():
     file = open('test2.txt','r')
-
-    textLines = []
-    lineNumber = 1
-    lineTime = 'XXXXXXXXXXXXXXXXXXXXXXX'
-    lineText= 'XXXXXXXXXXXXXXXXXXXXXXX'
-
-    #LineTimedText
-
+    timedLineDict = {}
+    lineTime, lineText, timedLine = 'XXXXXXXXXXXXXXXXXXXXXXX', 'XXXXXXXXXXXXXXXXXXXXXXX', 'XXXXXXXXXXXXXXXXXXXXXXX'
+    count = 0
     for line in file:
             line = line.strip()
-        #    print(line)
-            #catches blank lines
-            if re.findall(r'^\s*$', line):
+            #catches blank lines and {}
+            if re.findall(r'^\s*$|[\{]', line):
                 pass
-            #    print(re.findall(r'^\s*$', line))
-            #catches instances where timestamp and text are not on the same line
+            #catches other instances where timestamp and text are not on the same line
             elif re.findall(r'^[^\[][\w]+',line):
-                lineText = str(re.findall(r'^[[\s|\w]+',line))
-                lineText = lineText[2:-2].strip()
-                timedLine = lineTime, lineText
+                lineText = str(re.findall(r'^[[\s|\S]+',line))
+                lineText = lineText[2:-2]
+                addToTimedLine(lineTime, lineText, timedLineDict)
+            #catch instances where timestamp and text are on the same line
             elif re.findall(r'[0-9]+[\:][0-9]+[\:][0-9]+[\.][0-9]+', line):
-                lineTime = str(re.findall(r'[0-9]+[\:][0-9]+[\:][0-9]+[\.][0-9]+', line))
-                lineTime = lineTime[2:-2].strip()
+                lineTime = str(re.findall(r'[0-9]+[\:][0-9]+[\:][0-9]+[\.][0-9]+', line)).strip()
+                lineTime = lineTime[2:-2]
                 lineTime = lineTime
-                lineText = str(re.findall(r'[\]][\s|\w]*', line))
-                lineText = lineText[5:-2].strip()
-                timedLine = lineTime, lineText
-            print(timedLine)
-
-
-
-
+                lineText = str(re.findall(r'[\]][\s|\S]*', line)).strip()
+                lineText = lineText[5:-2]
+                addToTimedLine(lineTime, lineText, timedLineDict)
+            else:
+                pass
     file.close()
+    return timedLineDict
+
+#for input - adds each line to the dictionary{string : string}, combines blank lines and lines with text but no timestamp, and instances where timestamp and text are not on the same line because there are two speakers onto a single line
+def addToTimedLine(time, text, theDict):
+    if time not in theDict:
+        theDict[time] = text
+    #finds blank lines
+    elif not re.search('[^\W]',theDict[time]):
+        theDict[time] = text
+    else:
+        theDict[time] = theDict[time].strip()
+        theDict[time] = theDict[time] + " " + text
+    return theDict
+
+theDict = getTimedLines()
+for a in theDict:
+    print(a+"      "+theDict[a])
+
+#for output - creates a new line every time there is a timestamp that starts with a capital letter
+
+#correct issue with single quotes formatting weird - maybe convert file format
 
 
-getLines()
+
+
+
+#rewrite idea - use timestamp as a trigger and start a new list item after, otherwise build a string  On export, split lines by searching for single words that begin with a capital letter followed by a colon to split out speaker lines.
