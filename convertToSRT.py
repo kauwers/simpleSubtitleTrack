@@ -3,6 +3,7 @@ import re
 #for input - Gets each line in file and create a tuple with timestamp, content, then add them to a dictionary as strings {timestamp, text}
 def getTimedLines():
     file = open('test3.txt','r')
+    filename = file.name
     timedLineDict = {}
     lineTime, lineText, timedLine = 'XXXXXXXXXXXXXXXXXXXXXXX', 'XXXXXXXXXXXXXXXXXXXXXXX', 'XXXXXXXXXXXXXXXXXXXXXXX'
     count = 0
@@ -16,18 +17,18 @@ def getTimedLines():
             elif re.findall(r'^[^\[][\w]+',line):
                 lineText = removeBadQuotes(str(re.findall(r'^[[\s|\S]+',line)))
                 lineText = lineText[2:-2].strip()
-                addToTimedLine(lineTime, " part one " +lineText , timedLineDict)
+                addToTimedLine(lineTime, lineText , timedLineDict)
             #catch instances where timestamp and text are on the same line
             elif re.findall(r'[0-9]+[\:][0-9]+[\:][0-9]+[\.][0-9]+', line):
                 lineTime = findTimeStamp(line)
-                lineTime = lineTime[2:-2].strip()
+                lineTime = lineTime[2:-2].strip()+'5'
                 lineText = removeBadQuotes(str(re.findall(r'[\]][\s|\S]*', line)))
                 lineText = lineText[3:-2].strip()
-                addToTimedLine(lineTime,  lineText, timedLineDict)
+                addToTimedLine(lineTime, lineText, timedLineDict)
             else:
                 pass
     file.close()
-    return timedLineDict
+    return timedLineDict, filename
 
 #for input - adds each line to the dictionary{string : string}, combines blank lines and lines with text but no timestamp, and instances where timestamp and text are not on the same line because there are two speakers onto a single line
 def addToTimedLine(time, text, theDict):
@@ -41,11 +42,11 @@ def addToTimedLine(time, text, theDict):
         theDict[time] = theDict[time] + " " + text
     return theDict
 
-#for input
+#for input formatting - remove tabs
 def removeTabs(line):
     line=str(re.sub('\t|\r|\n', ' ', line)) #remove tabs from lines
     return line
-#fix for single quotes that occur between double quotes
+#for input formatting - fix for single quotes that occur between double quotes
 def removeBadQuotes(line):
     line=str(re.sub(r"\\","", line))
     return line
@@ -53,7 +54,34 @@ def removeBadQuotes(line):
 #locates a string matching 00:00:00.00
 def findTimeStamp(line):
     time=str(re.findall(r'[0-9]+[\:][0-9]+[\:][0-9]+[\.][0-9]+', line))
+    time=str(re.sub(r'\.',',',time))
     return time
+
+#format the dictionary as SRT
+def writeTimedLines(lineDict, filename):
+    #open writefile and add SRT to the name before the extension
+    file = open(filename[0:-4]+"_srt.txt",'w')
+    srtList=[]
+    txtList = list(lineDict.keys())
+
+    count = 1
+    while count < len(txtList):
+        srtList.append([txtList[count-1]+" --> "+txtList[count]])
+        count+=1
+
+    count = 1
+    for k in lineDict:
+        try:
+            srtValue = str(srtList[count-1])
+            srtValue = srtValue[2:-2]
+            file.write(str(count-1)+'\n'+srtValue+'\n'+str(lineDict[k])+'\n\n')
+            count+=1
+        except:
+            pass
+
+
+
+    file.close()
 
 #for output - creates a new line every time there is a timestamp that starts with a capital letter
 
@@ -62,8 +90,12 @@ def findTimeStamp(line):
 
 
 #Function calls
-theDict = getTimedLines()
-for a in theDict:
-    print(a+"      "+theDict[a])
+
+theDict, theFile = getTimedLines()
+
+#for a in theDict:
+#    print(a+"      "+theDict[a])
+writeTimedLines(theDict, theFile)
+
 
 #rewrite idea - use timestamp as a trigger and start a new list item after, otherwise build a string  On export, split lines by searching for single words that begin with a capital letter followed by a colon to split out speaker lines.
