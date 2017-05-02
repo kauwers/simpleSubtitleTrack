@@ -9,7 +9,7 @@ You will need Python3 to run (https://www.python.org/downloads/mac-osx/)
 
 To run:
 1.
-Place all text tracks in the “simpleSubtitleTrack/text_tracks” folder.
+Create a folder named "text_tracks” inside the “simpleSubtitleTrack” folder.
 
 2.
 In Mac OS X Terminal, set the current directory to “simpleSubtitleTrack”.  
@@ -18,7 +18,7 @@ Example:
 cd /Users/yourname/Desktop/simpleSubtitleTrack
 
 3.
-Run the script in Mac OS X Terminal:
+Run the "convertToSRT" script in Mac OS X Terminal:
 
 python convertToSRT.py
 Or
