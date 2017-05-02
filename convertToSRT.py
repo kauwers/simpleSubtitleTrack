@@ -1,7 +1,7 @@
 import re
 import json
 from fileNameList import listTextTracks
-
+import os
 
 #for input - Gets each line in file and create a tuple with timestamp, content, then add them to a dictionary as strings {timestamp, text}
 def getTimedLines(filePath):
@@ -12,8 +12,12 @@ def getTimedLines(filePath):
     for line in file:
         line = line.strip()
         line = removeTabs(line)
-        #catches blank lines and {}
-        if re.findall(r'^\s*$|[\{]', line):
+        #catches QT code brackets and removes them - sometimes these are on the same line as actual timestamps
+        if re.search(r'[\{]', line):
+            #brackets = re.findall(r'[\{].*[\}]',line)
+            line = re.sub(r'[\{].*[\}]', "", line)
+        #catches blank lines
+        if re.findall(r'^\s*$', line):
             pass
         #catches other instances where timestamp and text are not on the same line
         elif re.findall(r'^[^\[][\w]+',line):
@@ -34,6 +38,10 @@ def getTimedLines(filePath):
 
 #for input - adds each line to the dictionary{string : string}, combines blank lines and lines with text but no timestamp, and instances where timestamp and text are not on the same line because there are two speakers onto a single line
 def addToTimedLine(time, text, theDict):
+    #check for completely blank lines and replace with a space - Kaltura SRT reader requires at least one space per line.
+    if re.search(r'^\s*$',text):
+        text = " "
+    #add time and lines, that have not already been added
     if time not in theDict:
         theDict[time] = text
     #finds blank lines
@@ -86,29 +94,16 @@ def writeTimedLines(lineDict, filename):
             pass
     file.close()
 
-#for output - creates a new line every time there is a timestamp that starts with a capital letter
-
-theDir = '/Users/kauwers/Desktop/Module1-2/gitSimpleSubtitleTrack/simpleSubtitleTrack/text_tracks'
 #Cycle through each file in the folder
-#listOfFiles = listTextTracks(theDir)
-
-with open('/Users/kauwers/Desktop/Module1-2/gitSimpleSubtitleTrack/simpleSubtitleTrack/text_tracks/fileNameList.json', 'r') as json_file:
+with open('fileNameList.json', 'r') as json_file:
 #with open(theDir+listOfFiles, 'r') as json_file:
+    theDir = 'text_tracks'
+    os.mkdir("srt")
     for line in json_file:
-        for line in json_file:
-            json_path = json.loads(line)
-            oldPath = json_path['fullpath']
-            newPath = oldPath.replace("txt", "srt")
-            theDict = getTimedLines(oldPath)
-            writeTimedLines(theDict, newPath)
+        json_path = json.loads(line)
+        oldPath = json_path['fullpath']
+        newPath = oldPath.replace("txt", "srt")
+        newPath = newPath.replace("text_tracks", "srt")
+        theDict = getTimedLines(oldPath)
+        writeTimedLines(theDict, newPath)
     json_file.close()
-
-
-
-
-
-#for a in theDict:
-#    print(a+"      "+theDict[a])
-
-
-#rewrite idea - use timestamp as a trigger and start a new list item after, otherwise build a string  On export, split lines by searching for single words that begin with a capital letter followed by a colon to split out speaker lines.
